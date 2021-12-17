@@ -1,8 +1,10 @@
 package covid;
 
+import java.io.Serializable;
+
 import util.Pol;
 
-public class Korisnik implements KorisnikInterfejs{
+public class Korisnik implements KorisnikInterfejs, Serializable{
 	private String ime;
 	private String prezime;
 	private String sifra;

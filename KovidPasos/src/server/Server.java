@@ -6,12 +6,12 @@ import java.net.Socket;
 import java.util.LinkedList;
 import java.util.List;
 
-public class Server {
+import covid.Korisnik;
 
-//	public static List<ClientHandler> onlineKorisnici = new LinkedList<>();
+public class Server {
 	
 	public static void main(String[] args) {
-		int port = 3006;
+		int port = 3009;
 		ServerSocket serverSoket = null;
 		Socket soketZaKomunikaciju = null;
 		

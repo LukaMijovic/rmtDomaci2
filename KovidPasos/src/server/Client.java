@@ -16,7 +16,7 @@ public class Client implements Runnable{
 	
 	public static void main(String[] args) {
 		try {
-			soketZaKomunikaciju = new Socket("localhost", 3006);
+			soketZaKomunikaciju = new Socket("localhost", 3009);
 			serverIn = new BufferedReader(new InputStreamReader(soketZaKomunikaciju.getInputStream()));
 			serverOut = new PrintStream(soketZaKomunikaciju.getOutputStream());
 			unosKorisnika = new BufferedReader(new InputStreamReader(System.in));
@@ -54,12 +54,19 @@ public class Client implements Runnable{
 				if (broj == 0) {
 					break;
 				}
+				if (broj == 1) {
+					boolean flag = false;
+					for (int i=0; i<6; i++) {
+//						System.out.println(serverIn.readLine());
+						String podatak = unosKorisnika.readLine();
+						serverOut.println(podatak);
+						System.out.println(podatak);
+					}
+				}
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-			
 		}
 	}
-	
 }

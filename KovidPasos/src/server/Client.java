@@ -16,7 +16,7 @@ public class Client implements Runnable{
 	
 	public static void main(String[] args) {
 		try {
-			soketZaKomunikaciju = new Socket("localhost", 3009);
+			soketZaKomunikaciju = new Socket("localhost", 3002);
 			serverIn = new BufferedReader(new InputStreamReader(soketZaKomunikaciju.getInputStream()));
 			serverOut = new PrintStream(soketZaKomunikaciju.getOutputStream());
 			unosKorisnika = new BufferedReader(new InputStreamReader(System.in));

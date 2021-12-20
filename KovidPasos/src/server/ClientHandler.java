@@ -13,10 +13,13 @@ import java.io.PrintStream;
 import java.io.Serializable;
 import java.net.Socket;
 import java.util.ArrayList;
+import java.util.GregorianCalendar;
 import java.util.LinkedList;
 import java.util.List;
 
+import covid.DostupneVakcine;
 import covid.Korisnik;
+import covid.Vakcina;
 import util.Pol;
 
 public class ClientHandler extends Thread implements Serializable{
@@ -60,7 +63,7 @@ public class ClientHandler extends Thread implements Serializable{
 				case 1:
 					klijentOut.println(">>>	Ime:");
 					String ime = klijentIn.readLine();
-					System.out.println(ime);
+//					System.out.println(ime);
 					
 					klijentOut.println(">>> Prezime:");
 					String prezime = klijentIn.readLine();
@@ -91,6 +94,136 @@ public class ClientHandler extends Thread implements Serializable{
 					String sifra = klijentIn.readLine();
 					
 					Korisnik noviKorisnik = new Korisnik(ime, prezime, sifra, email, jmbg, pol);
+					
+					klijentOut.println(">>> Da li ste vakcinisani prvom dozom?");
+					klijentOut.println(">>> 1. Da; 2. Ne");
+					int flagVax = Integer.parseInt(klijentIn.readLine());
+					
+					if (flagVax == 1) {
+						
+						klijentOut.println(">>> Koju vakcinu ste primili (prva doza)?");
+						klijentOut.println(">>> 1. Fajzer; 2. Sinofarm; 3. Sputnik");
+						int indeksVakcine = Integer.parseInt(klijentIn.readLine());
+						
+						klijentOut.println(">>> Kada ste primili prvu dozu? (D.M.YYYY)");
+						String pomocniNiz[] = klijentIn.readLine().split("\\.");
+						int dan = Integer.parseInt(pomocniNiz[0]);
+						int mesec = Integer.parseInt(pomocniNiz[1]);
+						int godina = Integer.parseInt(pomocniNiz[2]);
+						GregorianCalendar datumPrveDoze = new GregorianCalendar(godina, mesec-1, dan);
+						Vakcina prvaDoza;
+						
+						switch (indeksVakcine) {
+						case 1:
+							prvaDoza = new Vakcina(DostupneVakcine.Fajzer, datumPrveDoze);
+							noviKorisnik.setVakcine(prvaDoza);
+							break;
+						case 2:
+							prvaDoza = new Vakcina(DostupneVakcine.Sinofarm, datumPrveDoze);
+							noviKorisnik.setVakcine(prvaDoza);
+							break;
+						case 3:
+							prvaDoza = new Vakcina(DostupneVakcine.Sputnik, datumPrveDoze);
+							noviKorisnik.setVakcine(prvaDoza);
+							break;
+
+						default:
+							break;
+						}
+						
+						System.out.println(noviKorisnik.getVakcine()[0].toString());
+						
+						klijentOut.println(">>> Da li ste vakcinisani drugom dozom? (Podrazumeva se da je isti proizvodjac kao i za prvu dozu)");
+						klijentOut.println(">>> 1. Da; 2. Ne");
+						flagVax = Integer.parseInt(klijentIn.readLine());
+						
+						if (flagVax == 1) {
+							
+//							klijentOut.println(">>> Koju vakcinu ste primili (druga doza)?");
+//							klijentOut.println(">>> 1. Fajzer; 2. Sinofarm; 3. Sputnik");
+//							int indeksVakcine2 = Integer.parseInt(klijentIn.readLine());
+							
+							klijentOut.println(">>> Kada ste primili drugu dozu? (D.M.YYYY)");
+							String pomocniNiz2[] = klijentIn.readLine().split("\\.");
+							dan = Integer.parseInt(pomocniNiz2[0]);
+							mesec = Integer.parseInt(pomocniNiz2[1]);
+							godina = Integer.parseInt(pomocniNiz2[2]);
+							
+							GregorianCalendar datumDrugeDoze = new GregorianCalendar(godina, mesec-1, dan);
+							
+							if ((datumDrugeDoze.getTimeInMillis()/604800000 - datumPrveDoze.getTimeInMillis()/604800000 >= 3)) {
+								Vakcina drugaDoza;
+								
+								switch (indeksVakcine) {
+								case 1:
+									drugaDoza = new Vakcina(DostupneVakcine.Fajzer, datumDrugeDoze);
+									noviKorisnik.setVakcine(drugaDoza);
+									break;
+								case 2:
+									drugaDoza = new Vakcina(DostupneVakcine.Sinofarm, datumDrugeDoze);
+									noviKorisnik.setVakcine(drugaDoza);
+									break;
+								case 3:
+									drugaDoza = new Vakcina(DostupneVakcine.Sputnik, datumDrugeDoze);
+									noviKorisnik.setVakcine(drugaDoza);
+									break;
+
+								default:
+									break;
+								}
+								
+								//System.out.println(noviKorisnik.getVakcine()[1].toString());
+								
+								klijentOut.println(">>> Da li ste vakcinisani trecom buster dozom?");
+								klijentOut.println(">>> 1. Da; 2. Ne");
+								flagVax = Integer.parseInt(klijentIn.readLine());
+								
+								if (flagVax == 1) {
+									
+									klijentOut.println(">>> Koju vakcinu ste primili (prva doza)?");
+									klijentOut.println(">>> 1. Fajzer; 2. Sinofarm; 3. Sputnik");
+									int indeksVakcine3 = Integer.parseInt(klijentIn.readLine());
+									
+									klijentOut.println(">>> Kada ste primili prvu dozu? (D.M.YYYY)");
+									String pomocniNiz3[] = klijentIn.readLine().split("\\.");
+									dan = Integer.parseInt(pomocniNiz3[0]);
+									mesec = Integer.parseInt(pomocniNiz3[1]);
+									godina = Integer.parseInt(pomocniNiz3[2]);
+									GregorianCalendar datumTreceDoze = new GregorianCalendar(godina, mesec-1, dan);
+									
+									if (!(datumDrugeDoze.get(2) - datumPrveDoze.get(2) >= 6)) {
+										klijentOut.println(">>> Treca doza mora biti primljena minimalno 6 meseci nakon prve! Ponistava se radnja!");
+										break;
+									}
+									
+									Vakcina trecaDoza;
+									
+									switch (indeksVakcine3) {
+									case 1:
+										trecaDoza = new Vakcina(DostupneVakcine.Fajzer, datumPrveDoze);
+										noviKorisnik.setVakcine(trecaDoza);
+										break;
+									case 2:
+										trecaDoza = new Vakcina(DostupneVakcine.Sinofarm, datumPrveDoze);
+										noviKorisnik.setVakcine(trecaDoza);
+										break;
+									case 3:
+										trecaDoza = new Vakcina(DostupneVakcine.Sputnik, datumPrveDoze);
+										noviKorisnik.setVakcine(trecaDoza);
+										break;
+
+									default:
+										break;
+									}
+									
+									System.out.println(noviKorisnik.getVakcine()[2].toString());
+								}
+							} else {
+								klijentOut.println(">>> Druga doza mora biti primljena minimalno 3 nedelje nakon prve! Ponistava se radnja!");
+							}
+						}
+					}
+					
 					registrovaniKorisnici.add(noviKorisnik);
 					
 					try (FileOutputStream fo = new FileOutputStream("registrovani_korisnici.out");

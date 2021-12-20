@@ -1,6 +1,8 @@
 package util;
 
-public enum Pol {
+import java.io.Serializable;
+
+public enum Pol implements Serializable {
 	Muski,
 	Zenski
 }

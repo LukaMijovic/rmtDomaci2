@@ -11,7 +11,7 @@ import covid.Korisnik;
 public class Server {
 	
 	public static void main(String[] args) {
-		int port = 3009;
+		int port = 3002;
 		ServerSocket serverSoket = null;
 		Socket soketZaKomunikaciju = null;
 		

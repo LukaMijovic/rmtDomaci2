@@ -29,7 +29,7 @@ public class Server {
 			}
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.err.println(">>Port (" + port + ") je vec zauzet.");
 		}
 	}
 	

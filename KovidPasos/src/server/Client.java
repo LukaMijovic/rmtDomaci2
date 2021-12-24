@@ -35,7 +35,7 @@ public class Client implements Runnable{
 			soketZaKomunikaciju.close();
 		} catch (UnknownHostException e) {
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			System.err.println(">> Host nije pronadjen.");
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -55,12 +55,16 @@ public class Client implements Runnable{
 					break;
 				}
 				if (broj == 1) {
-					boolean flag = false;
-					for (int i=0; i<6; i++) {
-//						System.out.println(serverIn.readLine());
+					//boolean flag = false;
+					while (true) {
 						String podatak = unosKorisnika.readLine();
 						serverOut.println(podatak);
-						System.out.println(podatak);
+					}
+				}
+				if (broj == 2) {
+					while (true) {
+						String podatak = unosKorisnika.readLine();
+						serverOut.println(podatak);
 					}
 				}
 			} catch (IOException e) {

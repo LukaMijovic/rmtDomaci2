@@ -251,25 +251,125 @@ public class ClientHandler extends Thread implements Serializable {
 						// TODO Auto-generated catch block
 						System.err.println(">> Fajl je prazan.");
 					}
-					
+
 					klijentOut.println(">>> Unesite vasu email adresu");
 					String emailKorisnika = klijentIn.readLine();
 					klijentOut.println(">>> Unesite vasu sifru");
 					String sifraKorisnika = klijentIn.readLine();
-					
+
 					boolean flagLogIn = false;
-					
+
 					for (Korisnik korisnik : registrovaniKorisnici) {
 						if (korisnik.getEmail().equals(emailKorisnika) && korisnik.getSifra().equals(sifraKorisnika)) {
 							klijentOut.println(">>> Uspesno ste se prijavili na platformu!");
 							flagLogIn = true;
+
+							klijentOut.println(">>> 1. Popunite vakcine; 2. Pristup kovid propusnici");
+							int indeksOdgovor = Integer.parseInt(klijentIn.readLine());
+
+							switch (indeksOdgovor) {
+							case 1:
+								if (korisnik.getVakcine()[0] == null) {
+									klijentOut.println(">>> Da li ste vakcinisani prvom dozom?");
+									klijentOut.println(">>> 1. Da; 2. Ne");
+									flagVax = Integer.parseInt(klijentIn.readLine());
+									int indeksVakcine = -1;
+
+									if (flagVax == 1) {
+
+										klijentOut.println(">>> Koju vakcinu ste primili (prva doza)?");
+										klijentOut.println(">>> 1. Fajzer; 2. Sinofarm; 3. Sputnik");
+										indeksVakcine = Integer.parseInt(klijentIn.readLine());
+
+										klijentOut.println(">>> Kada ste primili prvu dozu? (D.M.YYYY)");
+										String pomocniNiz[] = klijentIn.readLine().split("\\.");
+										int dan = Integer.parseInt(pomocniNiz[0]);
+										int mesec = Integer.parseInt(pomocniNiz[1]);
+										int godina = Integer.parseInt(pomocniNiz[2]);
+										GregorianCalendar datumPrveDoze = new GregorianCalendar(godina, mesec - 1, dan);
+										Vakcina prvaDoza;
+
+										switch (indeksVakcine) {
+										case 1:
+											prvaDoza = new Vakcina(DostupneVakcine.Fajzer, datumPrveDoze);
+											korisnik.setVakcine(prvaDoza);
+											break;
+										case 2:
+											prvaDoza = new Vakcina(DostupneVakcine.Sinofarm, datumPrveDoze);
+											korisnik.setVakcine(prvaDoza);
+											break;
+										case 3:
+											prvaDoza = new Vakcina(DostupneVakcine.Sputnik, datumPrveDoze);
+											korisnik.setVakcine(prvaDoza);
+											break;
+
+										default:
+											break;
+										}
+									}
+									klijentOut.println(
+											">>> Da li ste vakcinisani drugom dozom? (Podrazumeva se da je isti proizvodjac kao i za prvu dozu)");
+									klijentOut.println(">>> 1. Da; 2. Ne");
+									flagVax = Integer.parseInt(klijentIn.readLine());
+
+									if (flagVax == 1) {
+
+//										klijentOut.println(">>> Koju vakcinu ste primili (druga doza)?");
+//										klijentOut.println(">>> 1. Fajzer; 2. Sinofarm; 3. Sputnik");
+//										int indeksVakcine2 = Integer.parseInt(klijentIn.readLine());
+
+										klijentOut.println(">>> Kada ste primili drugu dozu? (D.M.YYYY)");
+										String pomocniNiz2[] = klijentIn.readLine().split("\\.");
+										int dan = Integer.parseInt(pomocniNiz2[0]);
+										int mesec = Integer.parseInt(pomocniNiz2[1]);
+										int godina = Integer.parseInt(pomocniNiz2[2]);
+
+										GregorianCalendar datumDrugeDoze = new GregorianCalendar(godina, mesec - 1, dan);
+
+										if ((datumDrugeDoze.getTimeInMillis() / 604800000
+												- korisnik.getVakcine()[0].getDatumiDoza().getTimeInMillis() / 604800000 >= 3)) {
+											Vakcina drugaDoza;
+
+											if (indeksVakcine != -1) {
+												switch (indeksVakcine) {
+												case 1:
+													drugaDoza = new Vakcina(DostupneVakcine.Fajzer, datumDrugeDoze);
+													korisnik.setVakcine(drugaDoza);
+													break;
+												case 2:
+													drugaDoza = new Vakcina(DostupneVakcine.Sinofarm, datumDrugeDoze);
+													korisnik.setVakcine(drugaDoza);
+													break;
+												case 3:
+													drugaDoza = new Vakcina(DostupneVakcine.Sputnik, datumDrugeDoze);
+													korisnik.setVakcine(drugaDoza);
+													break;
+
+												default:
+													break;
+												}
+											}
+										}
+									}
+								}
+								break;
+								
+							case 2:
+								
+								break;
+
+							default:
+								break;
+							}
+
 						}
 					}
-					
+
 					if (!flagLogIn) {
-						klijentOut.println(">>> Neupesna prijava! Proverite da li ste dobro uneli adresu i sifru i da li ste se registrovali...");
+						klijentOut.println(
+								">>> Neupesna prijava! Proverite da li ste dobro uneli adresu i sifru i da li ste se registrovali...");
 					}
-					
+
 					odgovor = -1;
 					break;
 				case 0:
@@ -279,7 +379,7 @@ public class ClientHandler extends Thread implements Serializable {
 //					odgovor = -1;
 					break;
 				default:
-
+					klijentOut.println(">>> Neispravan odgovor!");
 					break;
 				}
 			}

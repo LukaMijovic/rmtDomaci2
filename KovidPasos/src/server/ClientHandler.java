@@ -3,15 +3,19 @@ package server;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.PrintStream;
+import java.io.PrintWriter;
 import java.io.Serializable;
 import java.net.Socket;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.GregorianCalendar;
 import java.util.LinkedList;
@@ -182,20 +186,20 @@ public class ClientHandler extends Thread implements Serializable {
 
 								if (flagVax == 1) {
 
-									klijentOut.println(">>> Koju vakcinu ste primili (prva doza)?");
+									klijentOut.println(">>> Koju vakcinu ste primili (treca doza)?");
 									klijentOut.println(">>> 1. Fajzer; 2. Sinofarm; 3. Sputnik");
 									int indeksVakcine3 = Integer.parseInt(klijentIn.readLine());
 
-									klijentOut.println(">>> Kada ste primili prvu dozu? (D.M.YYYY)");
+									klijentOut.println(">>> Kada ste primili trecu dozu? (D.M.YYYY)");
 									String pomocniNiz3[] = klijentIn.readLine().split("\\.");
 									dan = Integer.parseInt(pomocniNiz3[0]);
 									mesec = Integer.parseInt(pomocniNiz3[1]);
 									godina = Integer.parseInt(pomocniNiz3[2]);
 									GregorianCalendar datumTreceDoze = new GregorianCalendar(godina, mesec - 1, dan);
 
-									if (!(datumDrugeDoze.get(2) - datumPrveDoze.get(2) >= 6)) {
+									if (!(datumTreceDoze.get(2) - datumDrugeDoze.get(2) >= 6)) {
 										klijentOut.println(
-												">>> Treca doza mora biti primljena minimalno 6 meseci nakon prve! Ponistava se radnja!");
+												">>> Treca doza mora biti primljena minimalno 6 meseci nakon druge! Ponistava se radnja!");
 										break;
 									}
 
@@ -203,15 +207,15 @@ public class ClientHandler extends Thread implements Serializable {
 
 									switch (indeksVakcine3) {
 									case 1:
-										trecaDoza = new Vakcina(DostupneVakcine.Fajzer, datumPrveDoze);
+										trecaDoza = new Vakcina(DostupneVakcine.Fajzer, datumTreceDoze);
 										noviKorisnik.setVakcine(trecaDoza);
 										break;
 									case 2:
-										trecaDoza = new Vakcina(DostupneVakcine.Sinofarm, datumPrveDoze);
+										trecaDoza = new Vakcina(DostupneVakcine.Sinofarm, datumTreceDoze);
 										noviKorisnik.setVakcine(trecaDoza);
 										break;
 									case 3:
-										trecaDoza = new Vakcina(DostupneVakcine.Sputnik, datumPrveDoze);
+										trecaDoza = new Vakcina(DostupneVakcine.Sputnik, datumTreceDoze);
 										noviKorisnik.setVakcine(trecaDoza);
 										break;
 
@@ -324,10 +328,12 @@ public class ClientHandler extends Thread implements Serializable {
 										int mesec = Integer.parseInt(pomocniNiz2[1]);
 										int godina = Integer.parseInt(pomocniNiz2[2]);
 
-										GregorianCalendar datumDrugeDoze = new GregorianCalendar(godina, mesec - 1, dan);
+										GregorianCalendar datumDrugeDoze = new GregorianCalendar(godina, mesec - 1,
+												dan);
 
 										if ((datumDrugeDoze.getTimeInMillis() / 604800000
-												- korisnik.getVakcine()[0].getDatumiDoza().getTimeInMillis() / 604800000 >= 3)) {
+												- korisnik.getVakcine()[0].getDatumiDoza().getTimeInMillis()
+														/ 604800000 >= 3)) {
 											Vakcina drugaDoza;
 
 											if (indeksVakcine != -1) {
@@ -348,14 +354,88 @@ public class ClientHandler extends Thread implements Serializable {
 												default:
 													break;
 												}
+
+												klijentOut.println(">>> Da li ste vakcinisani trecom buster dozom?");
+												klijentOut.println(">>> 1. Da; 2. Ne");
+												flagVax = Integer.parseInt(klijentIn.readLine());
+
+												if (flagVax == 1) {
+
+													klijentOut.println(">>> Koju vakcinu ste primili (treca doza)?");
+													klijentOut.println(">>> 1. Fajzer; 2. Sinofarm; 3. Sputnik");
+													int indeksVakcine3 = Integer.parseInt(klijentIn.readLine());
+
+													klijentOut.println(">>> Kada ste primili trecu dozu? (D.M.YYYY)");
+													String pomocniNiz3[] = klijentIn.readLine().split("\\.");
+													dan = Integer.parseInt(pomocniNiz3[0]);
+													mesec = Integer.parseInt(pomocniNiz3[1]);
+													godina = Integer.parseInt(pomocniNiz3[2]);
+													GregorianCalendar datumTreceDoze = new GregorianCalendar(godina,
+															mesec - 1, dan);
+
+													if (!(korisnik.getVakcine()[1].getDatumiDoza().get(2)
+															- datumTreceDoze.get(2) >= 6)) {
+														klijentOut.println(
+																">>> Treca doza mora biti primljena minimalno 6 meseci nakon druge! Ponistava se radnja!");
+														break;
+													}
+
+													Vakcina trecaDoza;
+
+													switch (indeksVakcine3) {
+													case 1:
+														trecaDoza = new Vakcina(DostupneVakcine.Fajzer, datumTreceDoze);
+														korisnik.setVakcine(trecaDoza);
+														break;
+													case 2:
+														trecaDoza = new Vakcina(DostupneVakcine.Sinofarm,
+																datumTreceDoze);
+														korisnik.setVakcine(trecaDoza);
+														break;
+													case 3:
+														trecaDoza = new Vakcina(DostupneVakcine.Sputnik,
+																datumTreceDoze);
+														korisnik.setVakcine(trecaDoza);
+														break;
+
+													default:
+														break;
+													}
+
+													// System.out.println(korisnik.getVakcine()[2].toString());
+												}
+
 											}
+										} else {
+											klijentOut.println(
+													">>> Druga doza mora biti primljena minimalno 3 nedelje nakon prve! Ponistava se radnja!");
 										}
+										try (FileOutputStream fo = new FileOutputStream("registrovani_korisnici.out");
+												BufferedOutputStream bo = new BufferedOutputStream(fo);
+												ObjectOutputStream oo = new ObjectOutputStream(bo)) {
+											oo.flush();
+											oo.writeObject(registrovaniKorisnici);
+										}
+										klijentOut.println(">>> Gotovo.");
 									}
 								}
 								break;
-								
+
 							case 2:
-								
+								if (korisnik.getVakcine()[2] != null || korisnik.getVakcine()[1] != null) {
+									try(FileWriter fw = new FileWriter("kovidPropusnica_" + korisnik.getIme() + "_" + korisnik.getPrezime()); BufferedWriter bw = new BufferedWriter(fw); PrintWriter pw = new PrintWriter(bw)) {
+										pw.write("KOVID PROPUSNICA \n-Ime: " + korisnik.getIme() + "\n-Prezime: " + korisnik.getPrezime() + "\n-JMBG: " + korisnik.getJmbg() + "\n-Pol: " + korisnik.getPol());
+										pw.write("\n\n-Prva doza vakcine: " + korisnik.getVakcine()[0].getNaziv() + " " + new SimpleDateFormat("dd.MM.yyyy").format(korisnik.getVakcine()[0].getDatumiDoza().getTime()));
+										pw.write("\n-Druga doza vakcine: " + korisnik.getVakcine()[1].getNaziv() + " " + new SimpleDateFormat("dd.MM.yyyy").format(korisnik.getVakcine()[1].getDatumiDoza().getTime()));
+									
+										if (korisnik.getVakcine()[2] != null) {
+											pw.write("\n-Treca doza vakcine: " + korisnik.getVakcine()[2].getNaziv() + " " + new SimpleDateFormat("dd.MM.yyyy").format(korisnik.getVakcine()[2].getDatumiDoza().getTime()));
+										}
+										klijentOut.println(">>> Kovid propusnica generisana!");
+									}
+								} else {
+									klijentOut.println(">>> Nemate bar 2 doze vakcine!");
+								}
 								break;
 
 							default:

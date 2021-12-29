@@ -21,6 +21,7 @@ import java.util.GregorianCalendar;
 import java.util.LinkedList;
 import java.util.List;
 
+import covid.Admin;
 import covid.DostupneVakcine;
 import covid.Korisnik;
 import covid.Vakcina;
@@ -32,12 +33,16 @@ public class ClientHandler extends Thread implements Serializable {
 	private PrintStream klijentOut = null;
 	private Socket soketZaKomunikaciju = null;
 	public static ArrayList<Korisnik> registrovaniKorisnici = new ArrayList<>();
+	public static ArrayList<Admin> admini = new ArrayList<>();
 
 	public ClientHandler(Socket soketZaKomunikaciju) {
 		this.soketZaKomunikaciju = soketZaKomunikaciju;
 	}
 
 	public void run() {
+		for (int i = 1; i < 4; i++) {
+			admini.add(new Admin("admin" + i, "sifra" + i));
+		}
 		try (FileInputStream fi = new FileInputStream("registrovani_korisnici.out");
 				BufferedInputStream bi = new BufferedInputStream(fi);
 				ObjectInputStream oi = new ObjectInputStream(bi)) {
@@ -56,7 +61,7 @@ public class ClientHandler extends Thread implements Serializable {
 			int odgovor = -1;
 
 			while (odgovor == -1) {
-				klijentOut.println(">>> 1. Registracija; 2. Prijava; 0. Izlaz");
+				klijentOut.println(">>> 1. Registracija; 2. Prijava; 3. Prijava za Admina; 0. Izlaz");
 //				klijentOut.println(">>> 2. Prijava");
 //				klijentOut.println(">>> 0. Izlaz");
 
@@ -373,8 +378,122 @@ public class ClientHandler extends Thread implements Serializable {
 													GregorianCalendar datumTreceDoze = new GregorianCalendar(godina,
 															mesec - 1, dan);
 
-													if (!(korisnik.getVakcine()[1].getDatumiDoza().get(2)
-															- datumTreceDoze.get(2) >= 6)) {
+													if (!(datumTreceDoze.get(2) - korisnik.getVakcine()[1].getDatumiDoza().get(2) >= 6)) {
+														klijentOut.println(
+																">>> Treca doza mora biti primljena minimalno 6 meseci nakon druge! Ponistava se radnja! ");
+														break;
+													}
+
+													Vakcina trecaDoza;
+
+													switch (indeksVakcine3) {
+													case 1:
+														trecaDoza = new Vakcina(DostupneVakcine.Fajzer, datumTreceDoze);
+														korisnik.setVakcine(trecaDoza);
+														break;
+													case 2:
+														trecaDoza = new Vakcina(DostupneVakcine.Sinofarm,
+																datumTreceDoze);
+														korisnik.setVakcine(trecaDoza);
+														break;
+													case 3:
+														trecaDoza = new Vakcina(DostupneVakcine.Sputnik,
+																datumTreceDoze);
+														korisnik.setVakcine(trecaDoza);
+														break;
+
+													default:
+														break;
+													}
+
+													// System.out.println(korisnik.getVakcine()[2].toString());
+												}
+
+											}
+										} else {
+											klijentOut.println(
+													">>> Druga doza mora biti primljena minimalno 3 nedelje nakon prve! Ponistava se radnja!");
+										}
+										try (FileOutputStream fo = new FileOutputStream("registrovani_korisnici.out");
+												BufferedOutputStream bo = new BufferedOutputStream(fo);
+												ObjectOutputStream oo = new ObjectOutputStream(bo)) {
+											oo.flush();
+											oo.writeObject(registrovaniKorisnici);
+										}
+										klijentOut.println(">>> Gotovo.");
+									}
+								} else if (korisnik.getVakcine()[1] == null) {
+									int indeksVakcine = -1;
+									if (korisnik.getVakcine()[0].getNaziv() == DostupneVakcine.Fajzer) {
+										indeksVakcine = 1;
+									} else if (korisnik.getVakcine()[0].getNaziv() == DostupneVakcine.Sinofarm) {
+										indeksVakcine = 2;
+									} else if (korisnik.getVakcine()[0].getNaziv() == DostupneVakcine.Sputnik) {
+										indeksVakcine = 3;
+									}
+									klijentOut.println(
+											">>> Da li ste vakcinisani drugom dozom? (Podrazumeva se da je isti proizvodjac kao i za prvu dozu)");
+									klijentOut.println(">>> 1. Da; 2. Ne");
+									flagVax = Integer.parseInt(klijentIn.readLine());
+
+									if (flagVax == 1) {
+
+//										klijentOut.println(">>> Koju vakcinu ste primili (druga doza)?");
+//										klijentOut.println(">>> 1. Fajzer; 2. Sinofarm; 3. Sputnik");
+//										int indeksVakcine2 = Integer.parseInt(klijentIn.readLine());
+
+										klijentOut.println(">>> Kada ste primili drugu dozu? (D.M.YYYY)");
+										String pomocniNiz2[] = klijentIn.readLine().split("\\.");
+										int dan = Integer.parseInt(pomocniNiz2[0]);
+										int mesec = Integer.parseInt(pomocniNiz2[1]);
+										int godina = Integer.parseInt(pomocniNiz2[2]);
+
+										GregorianCalendar datumDrugeDoze = new GregorianCalendar(godina, mesec - 1,
+												dan);
+
+										if ((datumDrugeDoze.getTimeInMillis() / 604800000
+												- korisnik.getVakcine()[0].getDatumiDoza().getTimeInMillis()
+														/ 604800000 >= 3)) {
+											Vakcina drugaDoza;
+
+											if (indeksVakcine != -1) {
+												switch (indeksVakcine) {
+												case 1:
+													drugaDoza = new Vakcina(DostupneVakcine.Fajzer, datumDrugeDoze);
+													korisnik.setVakcine(drugaDoza);
+													break;
+												case 2:
+													drugaDoza = new Vakcina(DostupneVakcine.Sinofarm, datumDrugeDoze);
+													korisnik.setVakcine(drugaDoza);
+													break;
+												case 3:
+													drugaDoza = new Vakcina(DostupneVakcine.Sputnik, datumDrugeDoze);
+													korisnik.setVakcine(drugaDoza);
+													break;
+
+												default:
+													break;
+												}
+
+												klijentOut.println(">>> Da li ste vakcinisani trecom buster dozom?");
+												klijentOut.println(">>> 1. Da; 2. Ne");
+												flagVax = Integer.parseInt(klijentIn.readLine());
+
+												if (flagVax == 1) {
+
+													klijentOut.println(">>> Koju vakcinu ste primili (treca doza)?");
+													klijentOut.println(">>> 1. Fajzer; 2. Sinofarm; 3. Sputnik");
+													int indeksVakcine3 = Integer.parseInt(klijentIn.readLine());
+
+													klijentOut.println(">>> Kada ste primili trecu dozu? (D.M.YYYY)");
+													String pomocniNiz3[] = klijentIn.readLine().split("\\.");
+													dan = Integer.parseInt(pomocniNiz3[0]);
+													mesec = Integer.parseInt(pomocniNiz3[1]);
+													godina = Integer.parseInt(pomocniNiz3[2]);
+													GregorianCalendar datumTreceDoze = new GregorianCalendar(godina,
+															mesec - 1, dan);
+
+													if (!(datumTreceDoze.get(2) - korisnik.getVakcine()[1].getDatumiDoza().get(2) >= 6)) {
 														klijentOut.println(
 																">>> Treca doza mora biti primljena minimalno 6 meseci nakon druge! Ponistava se radnja!");
 														break;
@@ -418,18 +537,84 @@ public class ClientHandler extends Thread implements Serializable {
 										}
 										klijentOut.println(">>> Gotovo.");
 									}
-								}
+								} else if (korisnik.getVakcine()[2] == null) {
+									klijentOut.println(">>> Da li ste vakcinisani trecom buster dozom?");
+									klijentOut.println(">>> 1. Da; 2. Ne");
+									flagVax = Integer.parseInt(klijentIn.readLine());
+
+									if (flagVax == 1) {
+
+										klijentOut.println(">>> Koju vakcinu ste primili (treca doza)?");
+										klijentOut.println(">>> 1. Fajzer; 2. Sinofarm; 3. Sputnik");
+										int indeksVakcine3 = Integer.parseInt(klijentIn.readLine());
+
+										klijentOut.println(">>> Kada ste primili trecu dozu? (D.M.YYYY)");
+										String pomocniNiz3[] = klijentIn.readLine().split("\\.");
+										int dan = Integer.parseInt(pomocniNiz3[0]);
+										int mesec = Integer.parseInt(pomocniNiz3[1]);
+										int godina = Integer.parseInt(pomocniNiz3[2]);
+										GregorianCalendar datumTreceDoze = new GregorianCalendar(godina,
+												mesec - 1, dan);
+
+										if (!(datumTreceDoze.get(2) - korisnik.getVakcine()[1].getDatumiDoza().get(2) >= 6)) {
+											klijentOut.println(
+													">>> Treca doza mora biti primljena minimalno 6 meseci nakon druge! Ponistava se radnja!");
+											break;
+										}
+
+										Vakcina trecaDoza;
+
+										switch (indeksVakcine3) {
+										case 1:
+											trecaDoza = new Vakcina(DostupneVakcine.Fajzer, datumTreceDoze);
+											korisnik.setVakcine(trecaDoza);
+											break;
+										case 2:
+											trecaDoza = new Vakcina(DostupneVakcine.Sinofarm,
+													datumTreceDoze);
+											korisnik.setVakcine(trecaDoza);
+											break;
+										case 3:
+											trecaDoza = new Vakcina(DostupneVakcine.Sputnik,
+													datumTreceDoze);
+											korisnik.setVakcine(trecaDoza);
+											break;
+
+										default:
+											break;
+										}
+								
+							} 
+							try (FileOutputStream fo = new FileOutputStream("registrovani_korisnici.out");
+									BufferedOutputStream bo = new BufferedOutputStream(fo);
+									ObjectOutputStream oo = new ObjectOutputStream(bo)) {
+								oo.flush();
+								oo.writeObject(registrovaniKorisnici);
+							}
+							klijentOut.println(">>> Gotovo.");
+							}
 								break;
 
 							case 2:
-								if (korisnik.getVakcine()[2] != null || korisnik.getVakcine()[1] != null) {
-									try(FileWriter fw = new FileWriter("kovidPropusnica_" + korisnik.getIme() + "_" + korisnik.getPrezime()); BufferedWriter bw = new BufferedWriter(fw); PrintWriter pw = new PrintWriter(bw)) {
-										pw.write("KOVID PROPUSNICA \n-Ime: " + korisnik.getIme() + "\n-Prezime: " + korisnik.getPrezime() + "\n-JMBG: " + korisnik.getJmbg() + "\n-Pol: " + korisnik.getPol());
-										pw.write("\n\n-Prva doza vakcine: " + korisnik.getVakcine()[0].getNaziv() + " " + new SimpleDateFormat("dd.MM.yyyy").format(korisnik.getVakcine()[0].getDatumiDoza().getTime()));
-										pw.write("\n-Druga doza vakcine: " + korisnik.getVakcine()[1].getNaziv() + " " + new SimpleDateFormat("dd.MM.yyyy").format(korisnik.getVakcine()[1].getDatumiDoza().getTime()));
-									
+								if (korisnik.getVakcine()[1] != null || korisnik.getVakcine()[0] != null) {
+									try (FileWriter fw = new FileWriter(
+											"kovidPropusnica_" + korisnik.getIme() + "_" + korisnik.getPrezime());
+											BufferedWriter bw = new BufferedWriter(fw);
+											PrintWriter pw = new PrintWriter(bw)) {
+										pw.write("KOVID PROPUSNICA \n-Ime: " + korisnik.getIme() + "\n-Prezime: "
+												+ korisnik.getPrezime() + "\n-JMBG: " + korisnik.getJmbg() + "\n-Pol: "
+												+ korisnik.getPol());
+										pw.write("\n\n-Prva doza vakcine: " + korisnik.getVakcine()[0].getNaziv() + " "
+												+ new SimpleDateFormat("dd.MM.yyyy")
+														.format(korisnik.getVakcine()[0].getDatumiDoza().getTime()));
+										pw.write("\n-Druga doza vakcine: " + korisnik.getVakcine()[1].getNaziv() + " "
+												+ new SimpleDateFormat("dd.MM.yyyy")
+														.format(korisnik.getVakcine()[1].getDatumiDoza().getTime()));
+
 										if (korisnik.getVakcine()[2] != null) {
-											pw.write("\n-Treca doza vakcine: " + korisnik.getVakcine()[2].getNaziv() + " " + new SimpleDateFormat("dd.MM.yyyy").format(korisnik.getVakcine()[2].getDatumiDoza().getTime()));
+											pw.write("\n-Treca doza vakcine: " + korisnik.getVakcine()[2].getNaziv()
+													+ " " + new SimpleDateFormat("dd.MM.yyyy").format(
+															korisnik.getVakcine()[2].getDatumiDoza().getTime()));
 										}
 										klijentOut.println(">>> Kovid propusnica generisana!");
 									}
@@ -452,20 +637,147 @@ public class ClientHandler extends Thread implements Serializable {
 
 					odgovor = -1;
 					break;
+				case 3:
+					klijentOut.println(">>> Unesite username admina:");
+					String adminUser = klijentIn.readLine();
+					klijentOut.println(">>> Unesite sifru admina:");
+					String adminSifra = klijentIn.readLine();
+
+					for (Admin admin : admini) {
+						if (admin.getUsername().equals(adminUser) && admin.getSifra().equals(adminSifra)) {
+							klijentOut.println(
+									">>> 1. Pretrazite korisnike sa JMBG-om; 2. Pogledajte sve korisnike; 3. Pogledajte broj vakcinisanih; 4. Pogledajte broj vakcinisanih pojedinacne vakcine");
+							int indeksOdgovora = Integer.parseInt(klijentIn.readLine());
+
+							switch (indeksOdgovora) {
+							case 1:
+								klijentOut.println(">>> Unesite JMBG korisnika:");
+								String jmbgKorisnika = klijentIn.readLine();
+
+								for (Korisnik korisnik : registrovaniKorisnici) {
+									if (korisnik.getJmbg().equals(jmbgKorisnika)) {
+										klijentOut.println(">>> Podaci korisnika:\n");
+										klijentOut.println("	Ime: " + korisnik.getIme());
+										klijentOut.println("	Prezime: " + korisnik.getPrezime());
+										klijentOut.println("	Pol: " + korisnik.getPol());
+										klijentOut.println("	Email: " + korisnik.getEmail());
+										int i = 0;
+										for (Vakcina vakcina : korisnik.getVakcine()) {
+											if (vakcina != null) {
+												klijentOut.println("	Doza " + i + " : " + vakcina.getNaziv());
+												i++;
+											}
+										}
+										if (i >= 2) {
+											klijentOut.println("	Kovid propusnica: ima\n");
+										} else {
+											klijentOut.println("	Kovid propusnica: nema\n");
+										}
+										break;
+									}
+								}
+								break;
+							case 2:
+								int i = 0;
+								int j = 0;
+								for (Korisnik korisnik : registrovaniKorisnici) {
+									j++;
+									for (Vakcina vakcina : korisnik.getVakcine()) {
+										if (vakcina != null) {
+											i++;
+										}
+									}
+									klijentOut.println(j + ". " + korisnik.getIme() + " " + korisnik.getPrezime()
+											+ " je primio " + i + " doze");
+									i = 0;
+								}
+								break;
+							case 3:
+								int saPrvom = 0, saDrugom = 0, saTrecom = 0;
+								for (Korisnik korisnik : registrovaniKorisnici) {
+									if (korisnik.getVakcine()[0] != null) {
+										if (korisnik.getVakcine()[1] != null) {
+											if (korisnik.getVakcine()[2] != null) {
+												saTrecom++;
+											} else {
+												saDrugom++;
+											}
+										} else {
+											saPrvom++;
+										}
+									}
+								}
+								klijentOut.println(">>> Broj korisnika sa prvom dozom: " + saPrvom
+										+ "\n	Broj korisnika sa drugom dozom: " + saDrugom
+										+ "\n	Broj korisnika sa trecom dozom: " + saTrecom);
+
+								break;
+							case 4:
+								klijentOut.println(">>> 1. Fajzer; 2. Sinofarm; 3. Sputnik");
+								int indeksVakcine = Integer.parseInt(klijentIn.readLine());
+								switch (indeksVakcine) {
+								case 1:
+									int brojFajzer = 0;
+									for (Korisnik korisnik : registrovaniKorisnici) {
+										if (korisnik.getVakcine()[0] != null) {
+											if (korisnik.getVakcine()[0].getNaziv() == DostupneVakcine.Fajzer) {
+												brojFajzer++;
+											}
+										}
+									}
+									klijentOut.println(
+											">>> " + brojFajzer + " korisnika je vakcinisano sa Fajzer vakcinom");
+									break;
+								case 2:
+									int brojSinofarm = 0;
+									for (Korisnik korisnik : registrovaniKorisnici) {
+										if (korisnik.getVakcine()[0] != null) {
+											if (korisnik.getVakcine()[0].getNaziv() == DostupneVakcine.Sinofarm) {
+												brojSinofarm++;
+											}
+										}
+									}
+									klijentOut.println(
+											">>> " + brojSinofarm + " korisnika je vakcinisano sa Sinofarm vakcinom");
+									break;
+								case 3:
+									int brojSputnik = 0;
+									for (Korisnik korisnik : registrovaniKorisnici) {
+										if (korisnik.getVakcine()[0] != null) {
+											if (korisnik.getVakcine()[0].getNaziv() == DostupneVakcine.Sputnik) {
+												brojSputnik++;
+											}
+										}
+									}
+									klijentOut.println(
+											">>> " + brojSputnik + " korisnika je vakcinisano sa Sputnik vakcinom");
+									break;
+
+								default:
+									break;
+								}
+								break;
+							default:
+								break;
+							}
+							break;
+						}
+					}
+					odgovor = -1;
+					break;
 				case 0:
 					klijentOut.println(">>> Prijatan ostatak dana!");
 					soketZaKomunikaciju.close();
-					System.out.println(">>> Ugasena konekcija!");
+					System.out.println(">> Ugasena konekcija!");
 //					odgovor = -1;
 					break;
 				default:
 					klijentOut.println(">>> Neispravan odgovor!");
 					break;
 				}
-			}
-		} catch (IOException e) {
+			}}catch(IOException e)
+	{
 			// TODO Auto-generated catch block
 			System.err.println(">> Prekinuta konekcija.");
 		}
-	}
-}
+}}

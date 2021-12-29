@@ -67,6 +67,12 @@ public class Client implements Runnable{
 						serverOut.println(podatak);
 					}
 				}
+				if (broj == 3) {
+					while (true) {
+						String podatak = unosKorisnika.readLine();
+						serverOut.println(podatak);
+					}
+				}
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
